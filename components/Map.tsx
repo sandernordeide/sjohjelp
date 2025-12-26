@@ -26,11 +26,11 @@ const boatIcon = L.divIcon({
 
 // User location icon
 const userIcon = L.divIcon({
-  html: '<div style="font-size: 24px; text-align: center; line-height: 1;">📍</div>',
+  html: '<div style="text-align: center;"><div style="font-size: 24px; line-height: 1;">📍</div><div style="font-size: 12px; font-weight: bold; color: #1e3a5f; margin-top: 2px;">Deg</div></div>',
   className: "user-marker",
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
-  popupAnchor: [0, -12],
+  iconSize: [50, 40],
+  iconAnchor: [25, 20],
+  popupAnchor: [0, -20],
 });
 
 interface Boat {
@@ -96,13 +96,7 @@ export default function Map({ centerTrigger }: MapProps) {
         <MapController centerTrigger={centerTrigger} />
         
         {/* User location */}
-        <Marker position={userLocation} icon={userIcon}>
-          <Popup>
-            <div className="text-center">
-              <strong>Din posisjon</strong>
-            </div>
-          </Popup>
-        </Marker>
+        <Marker position={userLocation} icon={userIcon} />
         
         {/* Boats */}
         {boats.map((boat) => (
