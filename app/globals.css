@@ -15,3 +15,17 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Map marker styles */
+.boat-marker,
+.user-marker {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.boat-marker:hover,
+.user-marker:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s;
+}

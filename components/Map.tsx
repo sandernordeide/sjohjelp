@@ -1,30 +1,123 @@
 "use client";
 
+import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { useEffect } from "react";
+
+// Fix for default marker icons in React-Leaflet
+if (typeof window !== "undefined") {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+    iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  });
+}
+
+// Custom boat icon
+const boatIcon = L.divIcon({
+  html: '<div style="font-size: 32px; text-align: center; line-height: 1;">⛵</div>',
+  className: "boat-marker",
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+  popupAnchor: [0, -16],
+});
+
+// User location icon
+const userIcon = L.divIcon({
+  html: '<div style="font-size: 24px; text-align: center; line-height: 1;">📍</div>',
+  className: "user-marker",
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, -12],
+});
+
+interface Boat {
+  id: number;
+  name: string;
+  phone: string;
+  lat: number;
+  lng: number;
+}
+
 export default function Map() {
-  // Høyanger coordinates: 61.2145° N, 6.0766° E
-  const latitude = 61.2145;
-  const longitude = 6.0766;
-  const zoom = 13;
+  // User location
+  const userLocation: [number, number] = [61.212322, 6.076083];
+  
+  // Boats on the water
+  const boats: Boat[] = [
+    {
+      id: 1,
+      name: "Sander",
+      phone: "+47 47352127",
+      lat: 61.21455,
+      lng: 6.06385,
+    },
+    {
+      id: 2,
+      name: "Arne Ove",
+      phone: "+47 99288837",
+      lat: 61.20969,
+      lng: 6.07033,
+    },
+  ];
 
   return (
-    <div className="w-full h-full min-h-[500px] rounded overflow-hidden">
-      <iframe
-        width="100%"
-        height="100%"
-        style={{ border: 0, minHeight: "500px" }}
-        src={`https://www.openstreetmap.org/export/embed.html?bbox=${longitude - 0.05},${latitude - 0.05},${longitude + 0.05},${latitude + 0.05}&layer=mapnik&marker=${latitude},${longitude}`}
-        title="Map of Høyanger, Vestland, Norway"
-      />
-      <div className="text-xs text-center mt-2 text-foreground/60">
-        <a 
-          href={`https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=${zoom}/${latitude}/${longitude}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-primary"
-        >
-          Se større kart på OpenStreetMap
-        </a>
-      </div>
+    <div className="w-full h-[500px] rounded overflow-hidden relative">
+      <MapContainer
+        center={userLocation}
+        zoom={14}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        
+        {/* User location */}
+        <Marker position={userLocation} icon={userIcon}>
+          <Popup>
+            <div className="text-center">
+              <strong>Din posisjon</strong>
+            </div>
+          </Popup>
+        </Marker>
+        <Circle
+          center={userLocation}
+          radius={50}
+          pathOptions={{ color: "blue", fillColor: "blue", fillOpacity: 0.2 }}
+        />
+        
+        {/* Boats */}
+        {boats.map((boat) => (
+          <Marker
+            key={boat.id}
+            position={[boat.lat, boat.lng]}
+            icon={boatIcon}
+          >
+            <Popup>
+              <div className="text-center">
+                <strong className="text-lg">⛵ {boat.name}</strong>
+                <p className="text-sm mt-2">
+                  <a 
+                    href={`tel:${boat.phone}`}
+                    className="text-primary hover:text-primary-hover font-semibold"
+                  >
+                    {boat.phone}
+                  </a>
+                </p>
+                <button
+                  onClick={() => window.open(`tel:${boat.phone}`)}
+                  className="mt-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded text-sm"
+                >
+                  Ring nå
+                </button>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
     </div>
   );
 }
