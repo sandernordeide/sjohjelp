@@ -7,7 +7,7 @@ export default function Navbar() {
             <span className="text-2xl">⚓</span>
             <h1 className="text-xl font-bold">Sjøhjelp</h1>
           </div>
-          <div className="flex space-x-6">
+          <div className="flex items-center space-x-6">
             <a href="/" className="hover:text-secondary transition-colors">
               Hjem
             </a>
@@ -16,6 +16,12 @@ export default function Navbar() {
             </a>
             <a href="/about" className="hover:text-secondary transition-colors">
               Om oss
+            </a>
+            <a 
+              href="/register" 
+              className="bg-white text-primary hover:bg-secondary hover:text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+            >
+              Registrer deg
             </a>
           </div>
         </div>
