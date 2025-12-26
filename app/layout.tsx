@@ -16,11 +16,14 @@ export default function RootLayout({
   return (
     <html lang="no">
       <body className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
+        {/* Mobile-only container */}
+        <div className="max-w-md mx-auto w-full min-h-screen flex flex-col shadow-xl">
+          <Navbar />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+        </div>
       </body>
     </html>
   );
