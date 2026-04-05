@@ -1,9 +1,10 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect } from "react";
+import type { AppMode } from "@/components/ActionButtons";
 
 // Fix for default marker icons in React-Leaflet
 if (typeof window !== "undefined") {
@@ -33,6 +34,24 @@ const userIcon = L.divIcon({
   popupAnchor: [0, -20],
 });
 
+// Accident marker icon
+const accidentIcon = L.divIcon({
+  html: '<div style="font-size: 32px; text-align: center; line-height: 1;">🔴</div>',
+  className: "boat-marker",
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+  popupAnchor: [0, -16],
+});
+
+// SOS marker icon
+const sosIcon = L.divIcon({
+  html: '<div class="sos-pulse" style="font-size: 40px; text-align: center; line-height: 1;">🆘</div>',
+  className: "boat-marker",
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+  popupAnchor: [0, -20],
+});
+
 interface Boat {
   id: number;
   name: string;
@@ -41,28 +60,63 @@ interface Boat {
   lng: number;
 }
 
-interface MapProps {
+export interface MapProps {
+  mode: AppMode;
   centerTrigger?: number;
+  userPosition?: { lat: number; lng: number } | null;
+  accidentMarker?: { lat: number; lng: number } | null;
+  sosActive?: boolean;
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
 // Component to programmatically control map
-function MapController({ centerTrigger }: { centerTrigger?: number }) {
+function MapController({
+  centerTrigger,
+  userPosition,
+  followUser,
+}: {
+  centerTrigger?: number;
+  userPosition: [number, number];
+  followUser: boolean;
+}) {
   const map = useMap();
-  const userLocation: [number, number] = [61.212322, 6.076083];
 
   useEffect(() => {
     if (centerTrigger) {
-      map.setView(userLocation, 15, { animate: true, duration: 1 });
+      map.setView(userPosition, 15, { animate: true, duration: 1 });
     }
-  }, [centerTrigger, map]);
+  }, [centerTrigger, map, userPosition]);
+
+  useEffect(() => {
+    if (followUser) {
+      map.setView(userPosition, map.getZoom(), { animate: true, duration: 0.5 });
+    }
+  }, [followUser, userPosition, map]);
 
   return null;
 }
 
-export default function Map({ centerTrigger }: MapProps) {
-  // User location
-  const userLocation: [number, number] = [61.212322, 6.076083];
-  
+// Click handler for accident pin-drop
+function ClickHandler({ onMapClick }: { onMapClick?: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onMapClick?.(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+export default function Map({
+  mode,
+  centerTrigger,
+  userPosition,
+  accidentMarker,
+  sosActive,
+  onMapClick,
+}: MapProps) {
+  const pos = userPosition ?? { lat: 61.212322, lng: 6.076083 };
+  const userLocation: [number, number] = [pos.lat, pos.lng];
+
   // Boats on the water
   const boats: Boat[] = [
     {
@@ -92,12 +146,28 @@ export default function Map({ centerTrigger }: MapProps) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        
-        <MapController centerTrigger={centerTrigger} />
-        
+
+        <MapController
+          centerTrigger={centerTrigger}
+          userPosition={userLocation}
+          followUser={mode === "tur"}
+        />
+
+        {/* Click-to-pin in accident mode */}
+        {mode === "ulykke" && <ClickHandler onMapClick={onMapClick} />}
+
         {/* User location */}
-        <Marker position={userLocation} icon={userIcon} />
-        
+        <Marker position={userLocation} icon={sosActive ? sosIcon : userIcon} />
+
+        {/* Accident marker */}
+        {accidentMarker && (
+          <Marker position={[accidentMarker.lat, accidentMarker.lng]} icon={accidentIcon}>
+            <Popup>
+              <strong>Rapportert ulykke</strong>
+            </Popup>
+          </Marker>
+        )}
+
         {/* Boats */}
         {boats.map((boat) => (
           <Marker
@@ -109,7 +179,7 @@ export default function Map({ centerTrigger }: MapProps) {
               <div className="text-center">
                 <strong className="text-lg">⛵ {boat.name}</strong>
                 <p className="text-sm mt-2">
-                  <a 
+                  <a
                     href={`tel:${boat.phone}`}
                     className="text-primary hover:text-primary-hover font-semibold"
                   >
