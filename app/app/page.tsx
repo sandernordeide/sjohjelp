@@ -130,8 +130,6 @@ export default function AppPage() {
     (data: { type: string; description: string; position: { lat: number; lng: number } }) => {
       // TODO: Send to backend
       console.log("Accident report:", data);
-      // Keep marker visible, return to idle after a delay
-      setTimeout(() => setMode("idle"), 3000);
     },
     []
   );
@@ -195,7 +193,7 @@ export default function AppPage() {
       )}
 
       {/* Map — hidden during SOS to avoid Leaflet z-index conflicts */}
-      {mode !== "sos" && (
+      {mode !== "sos" && mode !== "ulykke" && (
         <div className="bg-white rounded-lg shadow-lg p-2">
           <MapWrapper
             mode={mode}
@@ -208,12 +206,27 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* Accident form — below map */}
+      {/* Accident form with embedded map */}
       {mode === "ulykke" && (
         <div className="mt-4">
           <AccidentForm
             accidentPosition={accidentMarker}
+            userName={user.firstName}
+            userPhone={user.phone}
             onSubmit={handleAccidentSubmit}
+            onCancel={() => handleModeChange("idle")}
+            mapSlot={
+              <div className="rounded-lg overflow-hidden">
+                <MapWrapper
+                  mode={mode}
+                  centerTrigger={centerTrigger}
+                  userPosition={location}
+                  accidentMarker={accidentMarker}
+                  sosActive={false}
+                  onMapClick={(lat, lng) => setAccidentMarker({ lat, lng })}
+                />
+              </div>
+            }
           />
         </div>
       )}
